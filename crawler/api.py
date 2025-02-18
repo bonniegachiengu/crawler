@@ -16,6 +16,16 @@ class API:
 
     def search(self, file_id, title, year):
         """Search OMDb API for movie details."""
+        # Fetch the correct title from the filedetails table
+        conn = sqlite3.connect(self.dbpath)
+        cursor = conn.cursor()
+        cursor.execute("SELECT title FROM filedetails WHERE file_id = ?", (file_id,))
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            title = result[0]
+
         params = {"t": title, "y": year, "apikey": self.apikey}
         response = requests.get(self.url, params=params)
 
@@ -36,6 +46,14 @@ class API:
         """Save metadata into filemetadata, linking with filedetails.file_id."""
         conn = sqlite3.connect(self.dbpath)
         cursor = conn.cursor()
+
+        # Fetch the correct title from the filedetails table
+        cursor.execute("SELECT title FROM filedetails WHERE file_id = ?", (file_id,))
+        result = cursor.fetchone()
+        if result:
+            title = result[0]
+        else:
+            title = data.get("Title")
 
         # Create filemetadata table if it does not exist
         cursor.execute("""
@@ -76,34 +94,13 @@ class API:
 
         # Insert or update metadata
         cursor.execute("""
-            INSERT OR IGNORE INTO filemetadata (
+            INSERT OR REPLACE INTO filemetadata (
                 file_id, imdbID, title, year, rated, released, runtime, genre, 
                 director, writer, actors, plot, language, country, awards, 
                 poster, imdbRating, imdbVotes, rottenTomatoes, type, boxoffice
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(file_id) DO UPDATE SET
-                imdbID = excluded.imdbID,
-                title = excluded.title,
-                year = excluded.year,
-                rated = excluded.rated,
-                released = excluded.released,
-                runtime = excluded.runtime,
-                genre = excluded.genre,
-                director = excluded.director,
-                writer = excluded.writer,
-                actors = excluded.actors,
-                plot = excluded.plot,
-                language = excluded.language,
-                country = excluded.country,
-                awards = excluded.awards,
-                poster = excluded.poster,
-                imdbRating = excluded.imdbRating,
-                imdbVotes = excluded.imdbVotes,
-                rottenTomatoes = excluded.rottenTomatoes,
-                type = excluded.type,
-                boxoffice = excluded.boxoffice
         """, (
-            file_id, data.get("imdbID"), data.get("Title"), data.get("Year"),
+            file_id, data.get("imdbID"), title, data.get("Year"),
             data.get("Rated"), data.get("Released"), data.get("Runtime"),
             data.get("Genre"), data.get("Director"), data.get("Writer"),
             data.get("Actors"), data.get("Plot"), data.get("Language"),
@@ -115,12 +112,11 @@ class API:
         conn.commit()
         conn.close()
 
-if __name__ == '__main__':
-    api = API("http://www.omdbapi.com/", "1787320b")
-
-    # Collect all movies
-    movies = api.collect()
-
-    # Fetch and save details for each movie
-    for file_id, title, year in movies:
-        api.search(file_id, title, year)
+    def is_processed(self, file_id):
+        """Check if the file has already been processed."""
+        conn = sqlite3.connect(self.dbpath)
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM filemetadata WHERE file_id = ?", (file_id,))
+        result = cursor.fetchone()
+        conn.close()
+        return result is not None
