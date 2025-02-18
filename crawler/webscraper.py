@@ -81,28 +81,45 @@ class WebScraper:
         for actor in actors.split(', '):
             actor = actor.strip()
             self.cursor.execute("INSERT OR IGNORE INTO actors (name) VALUES (?)", (actor,))
-            self.cursor.execute("SELECT id FROM actors WHERE name = ?", (actor,))
-            actor_id = self.cursor.fetchone()[0]
-            self.cursor.execute("INSERT INTO movie_actors (movie_id, actor_id) VALUES (?, ?)", (file_id, actor_id))
-            self.updatePersonDetails('actors', actor, actor_id)
+            self.cursor.execute("SELECT id, avatar, bio FROM actors WHERE name = ?", (actor,))
+            result = self.cursor.fetchone()
+            
+            if result:
+                actor_id, avatar, bio = result
+                self.cursor.execute("INSERT INTO movie_actors (movie_id, actor_id) VALUES (?, ?)", (file_id, actor_id))
+
+                # Update only if details are missing
+                if not avatar and not bio:
+                    self.updatePersonDetails('actors', actor, actor_id)
 
     def classifyWriters(self, file_id, writers):
         for writer in writers.split(', '):
             writer = writer.strip()
             self.cursor.execute("INSERT OR IGNORE INTO writers (name) VALUES (?)", (writer,))
-            self.cursor.execute("SELECT id FROM writers WHERE name = ?", (writer,))
-            writer_id = self.cursor.fetchone()[0]
-            self.cursor.execute("INSERT INTO movie_writers (movie_id, writer_id) VALUES (?, ?)", (file_id, writer_id))
-            self.updatePersonDetails('writers', writer, writer_id)
+            self.cursor.execute("SELECT id, avatar, bio FROM writers WHERE name = ?", (writer,))
+            result = self.cursor.fetchone()
+
+            if result:
+                writer_id, avatar, bio = result
+                self.cursor.execute("INSERT INTO movie_writers (movie_id, writer_id) VALUES (?, ?)", (file_id, writer_id))
+
+                if not avatar and not bio:
+                    self.updatePersonDetails('writers', writer, writer_id)
 
     def classifyDirectors(self, file_id, directors):
         for director in directors.split(', '):
             director = director.strip()
             self.cursor.execute("INSERT OR IGNORE INTO directors (name) VALUES (?)", (director,))
-            self.cursor.execute("SELECT id FROM directors WHERE name = ?", (director,))
-            director_id = self.cursor.fetchone()[0]
-            self.cursor.execute("INSERT INTO movie_directors (movie_id, director_id) VALUES (?, ?)", (file_id, director_id))
-            self.updatePersonDetails('directors', director, director_id)
+            self.cursor.execute("SELECT id, avatar, bio FROM directors WHERE name = ?", (director,))
+            result = self.cursor.fetchone()
+
+            if result:
+                director_id, avatar, bio = result
+                self.cursor.execute("INSERT INTO movie_directors (movie_id, director_id) VALUES (?, ?)", (file_id, director_id))
+
+                if not avatar and not bio:
+                    self.updatePersonDetails('directors', director, director_id)
+
 
     def updatePersonDetails(self, table, name, person_id):
         url = f"https://en.wikipedia.org/wiki/{name.replace(' ', '_')}"
