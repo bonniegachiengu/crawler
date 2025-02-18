@@ -56,4 +56,8 @@ env/
 /*.sqlite
 /classifier/classified.db
 /classifier/classified.db-journal
-/classifier/classifiedd.db
+/crawler/classified.db
+
+# Ignore Example files
+crawler/examples
+crawler/examples/*
