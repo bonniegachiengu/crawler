@@ -1,6 +1,7 @@
 from finder.finder import Finder
 from api import API
 import sqlite3
+from webscraper import WebScraper
 
 finder = Finder()
 api = API("http://www.omdbapi.com/", "1787320b")
@@ -15,3 +16,8 @@ movies = api.collect()
 for file_id, title, year in movies:
     if not api.is_processed(file_id):
         api.search(file_id, title, year)
+
+# Classify metadata
+scraper = WebScraper(db_path='../classified.db')
+scraper.classify_metadata()
+scraper.close()

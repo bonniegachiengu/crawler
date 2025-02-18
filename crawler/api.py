@@ -56,32 +56,7 @@ class API:
             title = data.get("Title")
 
         # Create filemetadata table if it does not exist
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS filemetadata (
-                file_id INTEGER PRIMARY KEY,  
-                imdbID TEXT UNIQUE,
-                title TEXT,
-                year TEXT,
-                rated TEXT,
-                released TEXT,
-                runtime TEXT,
-                genre TEXT,
-                director TEXT,
-                writer TEXT,
-                actors TEXT,
-                plot TEXT,
-                language TEXT,
-                country TEXT,
-                awards TEXT,
-                poster TEXT,
-                imdbRating TEXT,
-                imdbVotes TEXT,
-                rottenTomatoes TEXT,
-                type TEXT,
-                boxoffice TEXT,
-                FOREIGN KEY (file_id) REFERENCES filedetails(file_id) ON DELETE CASCADE
-            )
-        """)
+        self._create_filemetadata_table(cursor)
 
         # Extract IMDb and Rotten Tomatoes ratings
         imdb_rating = None
@@ -116,7 +91,37 @@ class API:
         """Check if the file has already been processed."""
         conn = sqlite3.connect(self.dbpath)
         cursor = conn.cursor()
+        self._create_filemetadata_table(cursor)
         cursor.execute("SELECT 1 FROM filemetadata WHERE file_id = ?", (file_id,))
         result = cursor.fetchone()
         conn.close()
         return result is not None
+
+    def _create_filemetadata_table(self, cursor):
+        """Create filemetadata table if it does not exist."""
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS filemetadata (
+                file_id INTEGER PRIMARY KEY,  
+                imdbID TEXT UNIQUE,
+                title TEXT,
+                year TEXT,
+                rated TEXT,
+                released TEXT,
+                runtime TEXT,
+                genre TEXT,
+                director TEXT,
+                writer TEXT,
+                actors TEXT,
+                plot TEXT,
+                language TEXT,
+                country TEXT,
+                awards TEXT,
+                poster TEXT,
+                imdbRating TEXT,
+                imdbVotes TEXT,
+                rottenTomatoes TEXT,
+                type TEXT,
+                boxoffice TEXT,
+                FOREIGN KEY (file_id) REFERENCES filedetails(file_id) ON DELETE CASCADE
+            )
+        """)
