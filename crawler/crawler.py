@@ -7,7 +7,7 @@ finder = Finder()
 api = API("http://www.omdbapi.com/", "1787320b")
 
 # Run the Finder process with specified directory and extensions
-finder.run(directory=r'E:\Films\Movies\New folder', extensions=('mp4', 'mkv', 'avi'))
+finder.run(directory=r'E:\Films\Movies\Animations\Superheros', extensions=('mp4', 'mkv', 'avi'))
 
 # Collect all movies
 movies = api.collect()

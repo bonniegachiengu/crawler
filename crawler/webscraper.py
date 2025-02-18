@@ -86,7 +86,9 @@ class WebScraper:
             
             if result:
                 actor_id, avatar, bio = result
-                self.cursor.execute("INSERT INTO movie_actors (movie_id, actor_id) VALUES (?, ?)", (file_id, actor_id))
+                self.cursor.execute("SELECT 1 FROM movie_actors WHERE movie_id = ? AND actor_id = ?", (file_id, actor_id))
+                if not self.cursor.fetchone():
+                    self.cursor.execute("INSERT INTO movie_actors (movie_id, actor_id) VALUES (?, ?)", (file_id, actor_id))
 
                 # Update only if details are missing
                 if not avatar and not bio:
@@ -101,7 +103,9 @@ class WebScraper:
 
             if result:
                 writer_id, avatar, bio = result
-                self.cursor.execute("INSERT INTO movie_writers (movie_id, writer_id) VALUES (?, ?)", (file_id, writer_id))
+                self.cursor.execute("SELECT 1 FROM movie_writers WHERE movie_id = ? AND writer_id = ?", (file_id, writer_id))
+                if not self.cursor.fetchone():
+                    self.cursor.execute("INSERT INTO movie_writers (movie_id, writer_id) VALUES (?, ?)", (file_id, writer_id))
 
                 if not avatar and not bio:
                     self.updatePersonDetails('writers', writer, writer_id)
@@ -115,11 +119,12 @@ class WebScraper:
 
             if result:
                 director_id, avatar, bio = result
-                self.cursor.execute("INSERT INTO movie_directors (movie_id, director_id) VALUES (?, ?)", (file_id, director_id))
+                self.cursor.execute("SELECT 1 FROM movie_directors WHERE movie_id = ? AND director_id = ?", (file_id, director_id))
+                if not self.cursor.fetchone():
+                    self.cursor.execute("INSERT INTO movie_directors (movie_id, director_id) VALUES (?, ?)", (file_id, director_id))
 
                 if not avatar and not bio:
                     self.updatePersonDetails('directors', director, director_id)
-
 
     def updatePersonDetails(self, table, name, person_id):
         url = f"https://en.wikipedia.org/wiki/{name.replace(' ', '_')}"
