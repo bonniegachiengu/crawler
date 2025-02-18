@@ -106,17 +106,58 @@ class WebScraper:
 
     def updatePersonDetails(self, table, name, person_id):
         url = f"https://en.wikipedia.org/wiki/{name.replace(' ', '_')}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            avatar = soup.find('table', {'class': 'infobox'}).find('img')['src'] if soup.find('table', {'class': 'infobox'}) and soup.find('table', {'class': 'infobox'}).find('img') else None
-            bio = soup.find('div', {'class': 'mw-parser-output'}).find('p').text if soup.find('div', {'class': 'mw-parser-output'}) and soup.find('div', {'class': 'mw-parser-output'}).find('p') else None
-            date_of_birth = soup.find('span', {'class': 'bday'}).text if soup.find('span', {'class': 'bday'}) else None
-            date_of_death = soup.find('span', {'class': 'dday'}).text if soup.find('span', {'class': 'dday'}) else None
-            self.cursor.execute(f"""
-                UPDATE {table} SET avatar = ?, bio = ?, date_of_birth = ?, date_of_death = ? WHERE id = ?
-            """, (avatar, bio, date_of_birth, date_of_death, person_id))
-            self.conn.commit()
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+
+        response = requests.get(url, headers=headers)
+        
+        # Check if the Wikipedia page exists
+        if response.status_code == 404:
+            print(f"⚠️ Wikipedia page not found for: {name} ({url})")
+            return  # Skip this person
+        
+        if response.status_code != 200:
+            print(f"⚠️ Failed to fetch Wikipedia page for {name} (Status: {response.status_code})")
+            return  # Skip this person
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        # Extract avatar (check if infobox exists)
+        avatar = None
+        infobox = soup.find('table', {'class': 'infobox'})
+        if infobox:
+            img_tag = infobox.find('img')
+            if img_tag and 'src' in img_tag.attrs:
+                avatar = f"https:{img_tag['src']}"
+
+        # Extract meaningful bio (skip empty paragraphs)
+        bio = None
+        for p in soup.select('.mw-parser-output > p'):
+            text = p.text.strip()
+            if text:  # Skip empty or irrelevant paragraphs
+                bio = text
+                break
+
+        # Extract dates
+        date_of_birth = None
+        date_of_death = None
+
+        bday_span = soup.find('span', {'class': 'bday'})
+        if bday_span:
+            date_of_birth = bday_span.text
+
+        death_span = soup.find('span', {'class': 'dday'}) or soup.find('time', {'datetime'})
+        if death_span:
+            date_of_death = death_span.text
+
+        # Update database
+        self.cursor.execute(f"""
+            UPDATE {table} SET avatar = ?, bio = ?, date_of_birth = ?, date_of_death = ? WHERE id = ?
+        """, (avatar, bio, date_of_birth, date_of_death, person_id))
+        self.conn.commit()
+
+        print(f"✔ Updated Wikipedia details for: {name}")
 
     def close(self):
         self.conn.close()
