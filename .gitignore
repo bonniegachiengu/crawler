@@ -57,6 +57,7 @@ env/
 /classifier/classified.db
 /classifier/classified.db-journal
 /crawler/classified.db
+/crawler/classified.db-journal
 
 # Ignore Example files
 crawler/examples
