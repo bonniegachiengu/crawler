@@ -19,5 +19,5 @@ for file_id, title, year in movies:
 
 # Classify metadata
 scraper = WebScraper(db_path='../classified.db')
-scraper.classify_metadata()
+scraper.classifyMetadata()
 scraper.close()

@@ -4,9 +4,9 @@ class WebScraper:
     def __init__(self, db_path):
         self.conn = sqlite3.connect(db_path)
         self.cursor = self.conn.cursor()
-        self._create_tables()
+        self.createPeopleTables()
 
-    def _create_tables(self):
+    def createPeopleTables(self):
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS actors (
                 id INTEGER PRIMARY KEY,
@@ -51,19 +51,19 @@ class WebScraper:
         """)
         self.conn.commit()
 
-    def fetch_metadata(self):
+    def fetchMetadata(self):
         self.cursor.execute("SELECT file_id, actors, writer, director FROM filemetadata")
         return self.cursor.fetchall()
 
-    def classify_metadata(self):
-        metadata = self.fetch_metadata()
+    def classifyMetadata(self):
+        metadata = self.fetchMetadata()
         for file_id, actors, writers, directors in metadata:
-            self._classify_actors(file_id, actors)
-            self._classify_writers(file_id, writers)
-            self._classify_directors(file_id, directors)
+            self.classifyActors(file_id, actors)
+            self.classifyWriters(file_id, writers)
+            self.classifyDirectors(file_id, directors)
         self.conn.commit()
 
-    def _classify_actors(self, file_id, actors):
+    def classifyActors(self, file_id, actors):
         for actor in actors.split(', '):
             actor = actor.strip()
             self.cursor.execute("INSERT OR IGNORE INTO actors (name) VALUES (?)", (actor,))
@@ -71,7 +71,7 @@ class WebScraper:
             actor_id = self.cursor.fetchone()[0]
             self.cursor.execute("INSERT INTO movie_actors (movie_id, actor_id) VALUES (?, ?)", (file_id, actor_id))
 
-    def _classify_writers(self, file_id, writers):
+    def classifyWriters(self, file_id, writers):
         for writer in writers.split(', '):
             writer = writer.strip()
             self.cursor.execute("INSERT OR IGNORE INTO writers (name) VALUES (?)", (writer,))
@@ -79,7 +79,7 @@ class WebScraper:
             writer_id = self.cursor.fetchone()[0]
             self.cursor.execute("INSERT INTO movie_writers (movie_id, writer_id) VALUES (?, ?)", (file_id, writer_id))
 
-    def _classify_directors(self, file_id, directors):
+    def classifyDirectors(self, file_id, directors):
         for director in directors.split(', '):
             director = director.strip()
             self.cursor.execute("INSERT OR IGNORE INTO directors (name) VALUES (?)", (director,))
