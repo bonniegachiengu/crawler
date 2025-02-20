@@ -44,7 +44,8 @@ class WebScraper:
                 movie_id INTEGER,
                 actor_id INTEGER,
                 FOREIGN KEY (movie_id) REFERENCES filemetadata(file_id),
-                FOREIGN KEY (actor_id) REFERENCES actors(id)
+                FOREIGN KEY (actor_id) REFERENCES actors(id),
+                UNIQUE (movie_id, actor_id)
             )
         """)
         self.cursor.execute("""
@@ -52,7 +53,8 @@ class WebScraper:
                 movie_id INTEGER,
                 writer_id INTEGER,
                 FOREIGN KEY (movie_id) REFERENCES filemetadata(file_id),
-                FOREIGN KEY (writer_id) REFERENCES writers(id)
+                FOREIGN KEY (writer_id) REFERENCES writers(id),
+                UNIQUE (movie_id, writer_id)
             )
         """)
         self.cursor.execute("""
@@ -60,7 +62,8 @@ class WebScraper:
                 movie_id INTEGER,
                 director_id INTEGER,
                 FOREIGN KEY (movie_id) REFERENCES filemetadata(file_id),
-                FOREIGN KEY (director_id) REFERENCES directors(id)
+                FOREIGN KEY (director_id) REFERENCES directors(id),
+                UNIQUE (movie_id, director_id)
             )
         """)
         self.conn.commit()
@@ -76,6 +79,7 @@ class WebScraper:
             self.classifyWriters(file_id, writers)
             self.classifyDirectors(file_id, directors)
         self.conn.commit()
+        self.close()
 
     def classifyActors(self, file_id, actors):
         for actor in actors.split(', '):

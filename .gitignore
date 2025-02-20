@@ -62,3 +62,6 @@ env/
 # Ignore Example files
 crawler/examples
 crawler/examples/*
+
+# Ignore egg-info
+*.egg-info/
