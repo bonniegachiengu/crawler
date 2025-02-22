@@ -1,6 +1,6 @@
 import requests
 import sqlite3
-from utils import fetch
+from .utils import fetch
 
 class API:
     def __init__(self, url, apikey, dbpath='../classified.db'):
